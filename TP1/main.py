@@ -126,6 +126,24 @@ def validationTest():
     print(f"\nRésultat du calcul : {result}")
 
 
+def is_cons(f1: str, f2: str, voc: List[str]) -> bool:
+    # on doit regarder si quand f1 est vraie f2 est vraie aussi ! 
+    # on suppose que les deux experssions ont les mêmes variables (le même vocabulaire exactement)
+    all_interps = gen_interpretations(voc)
+    for i in range(2**len(voc)):
+        tab : Dict[str, bool] = next(all_interps)
+        val1 : bool = valuate(f1, tab)
+        val2 : bool = valuate(f2, tab)
+        if val1 and not val2:
+            return False
+    return True    
+
+
+
+def testCons():
+    print(is_cons("A or B", "A and B", ["A","B"]))
+    print(is_cons("A and B and C", "A or B or C",["A","B","C"]))
+    print(is_cons("A and B and C or D", "A or B or C and D and not(E)",["A","B","C","D", "E"]))
 
 
 
@@ -146,4 +164,7 @@ def validationTest():
 
 #table("(A or B) and not(C)", ["A", "B", "C"])
 
-validationTest();
+#validationTest();
+
+testCons()
+
