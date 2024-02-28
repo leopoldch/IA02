@@ -125,7 +125,6 @@ def validationTest():
     print(f"Temps d\'exécution : {end - start}secondes")
     print(f"\nRésultat du calcul : {result}")
 
-
 def is_cons(f1: str, f2: str, voc: List[str]) -> bool:
     # on doit regarder si quand f1 est vraie f2 est vraie aussi ! 
     # on suppose que les deux experssions ont les mêmes variables (le même vocabulaire exactement)
