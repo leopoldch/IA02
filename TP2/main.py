@@ -1,6 +1,8 @@
 import os
 import math
 import subprocess
+import networkx as nx
+import matplotlib.pyplot as plt
 
 # première partie du TP tester gospherat sur les exemples :
 
@@ -37,8 +39,6 @@ def exo1() -> None:
     if process.stderr:
         print("Erreurs :")
         print(process.stderr)
-
-
 
 
 ## exo 2 modélisation cohérante car satisfiable par le solveur
@@ -80,11 +80,12 @@ graph1: list = [
     (8, 10),
     (4, 9),
     (5, 10),
+    (1, 5),
 ]
 
 
 # cette fonction doit retourner la str sous format DIMACS
-def color_graph(graph) -> None:
+def color_graph(graph: list) -> None:
     my_line = ""
     my_line += "c FILE: graph_gen.cnf\n"
     my_line += "c \n"
@@ -130,10 +131,9 @@ def color_graph(graph) -> None:
         file.write(my_line)
 
 
-def print_graph()-> None: 
-    path: str = "/Users/leo/Documents/UTC/IA02/TP2/graph_gen.cnf"
-    commande:str = f"/Users/leo/go/bin/gophersat {path}"
-    colors:dict = {0:"red",1:"green",2:"blue"}
+def print_graph(graph: list, path: str) -> None:
+    commande: str = f"/Users/leo/go/bin/gophersat {path}"
+    colors: dict = {0: "red", 1: "green", 2: "blue"}
     process = subprocess.run(
         commande,
         shell=True,
@@ -143,22 +143,36 @@ def print_graph()-> None:
         check=True,
     )
 
-
-    returned_values:str = process.stdout
+    returned_values: str = process.stdout
     returned_values = returned_values.split("\n")
-    results = returned_values[2].replace("v","").split(" ")
+    results = returned_values[2].replace("v", "").split(" ")
     results.remove("")
-    results.pop(len(results)-1)
-    sommets = {}
+    results.pop(len(results) - 1)
+    sommets_colors = {}
     for item in results:
         number = int(item)
         if number > 0:
-            sommet:int = math.ceil(number/3)
-            color:str = colors[int(number%3)]
-            print(sommet,color)
+            sommet: int = math.ceil(number / 3)
+            color: str = colors[int(number % 3)]
+            sommets_colors[sommet] = color
+    displayed_graph = nx.Graph()
+
+    for sommet in sommets_colors:
+        displayed_graph.add_node(sommet)
+    for tup in graph:
+        displayed_graph.add_edge(tup[0], tup[1])
+    nx.draw(
+        displayed_graph,
+        with_labels=True,
+        pos=nx.spring_layout(displayed_graph),
+        node_size=500,
+        node_color=list(sommets_colors.values()),
+    )
+
+    plt.show()
 
 
 # exo1()
 
 color_graph(graph1)
-print_graph()
+print_graph(graph1, "/Users/leo/Documents/UTC/IA02/TP2/graph_gen.cnf")
