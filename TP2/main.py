@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 
 def exo1() -> None:
+    """Function solving exercice 1."""
 
     dossier: str = "/Users/leo/Documents/UTC/IA02/TP2/examples"
 
@@ -84,8 +85,8 @@ graph1: list = [
 ]
 
 
-# cette fonction doit retourner la str sous format DIMACS
 def color_graph(graph: list) -> None:
+    """cette fonction doit retourner la str sous format DIMACS"""
     my_line = ""
     my_line += "c FILE: graph_gen.cnf\n"
     my_line += "c \n"
@@ -132,8 +133,10 @@ def color_graph(graph: list) -> None:
 
 
 def print_graph(graph: list, path: str) -> None:
+    """Affichage du graphe coloré """
+
     commande: str = f"/Users/leo/go/bin/gophersat {path}"
-    colors: dict = {0: "red", 1: "green", 2: "blue"}
+    colors: dict = {0: "lightcoral", 1: "palegreen", 2: "skyblue"}
     process = subprocess.run(
         commande,
         shell=True,
@@ -144,8 +147,8 @@ def print_graph(graph: list, path: str) -> None:
     )
 
     returned_values: str = process.stdout
-    returned_values = returned_values.split("\n")
-    results = returned_values[2].replace("v", "").split(" ")
+    temp :list = returned_values.split("\n")
+    results = temp[2].replace("v", "").split(" ")
     results.remove("")
     results.pop(len(results) - 1)
     sommets_colors = {}
