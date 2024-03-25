@@ -133,7 +133,19 @@ def color_graph(graph: list) -> None:
 
 
 def print_graph(graph: list, path: str) -> None:
-    """Affichage du graphe coloré """
+    """Affichage du graphe coloré"""
+    pos = {
+        1: (4, 5),
+        2: (8, 3),
+        3: (7, 0),
+        4: (1, 0),
+        5: (0, 3),
+        6: (4, 4),
+        7: (6, 2),
+        8: (5, 1),
+        9: (3, 1),
+        10: (2, 2),
+    }
 
     commande: str = f"/Users/leo/go/bin/gophersat {path}"
     colors: dict = {0: "lightcoral", 1: "palegreen", 2: "skyblue"}
@@ -147,7 +159,7 @@ def print_graph(graph: list, path: str) -> None:
     )
 
     returned_values: str = process.stdout
-    temp :list = returned_values.split("\n")
+    temp: list = returned_values.split("\n")
     results = temp[2].replace("v", "").split(" ")
     results.remove("")
     results.pop(len(results) - 1)
@@ -167,7 +179,7 @@ def print_graph(graph: list, path: str) -> None:
     nx.draw(
         displayed_graph,
         with_labels=True,
-        pos=nx.spring_layout(displayed_graph),
+        pos=pos,
         node_size=500,
         node_color=list(sommets_colors.values()),
     )
