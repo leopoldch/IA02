@@ -1,3 +1,5 @@
+"""Code du TP2 IA02"""
+
 import os
 import math
 import subprocess
@@ -147,10 +149,9 @@ def print_graph(graph: list, path: str) -> None:
         10: (2, 2),
     }
 
-    commande: str = f"/Users/leo/go/bin/gophersat {path}"
     colors: dict = {0: "lightcoral", 1: "palegreen", 2: "skyblue"}
     process = subprocess.run(
-        commande,
+        f"/Users/leo/go/bin/gophersat {path}",
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
