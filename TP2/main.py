@@ -1,4 +1,4 @@
-"""Code du TP2 IA02"""
+"""Code du TP2 IA02, résolution d'un graphe tricoloration"""
 
 import os
 import math
