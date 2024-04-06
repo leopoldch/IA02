@@ -122,7 +122,7 @@ def create_value_constraints(grid: Grid):
     for line in range(9):
         for col in range(9):
             if grid[line][col] != 0:
-                cell = cell_to_variable(line, col, grid[line][col])
+                cell = cell_to_variable(line, col, grid[line][col]-1)
                 mystr += f"{cell} 0\n"
     return mystr
 
@@ -152,7 +152,7 @@ def write_dimacs_file(dimacs:str, filename: str):
 def generate_problem(grid: Grid):
     """fonction principale"""
     global NBCLAUSES
-    nb_var: int = 730
+    nb_var: int = 729
     filename : str = "sudoku.cnf"
 
     constraints: str = ""
@@ -223,10 +223,12 @@ def resolve(grid: Grid, filename: str):
     if response[0]:
         variables : list[int] = response[1]
         variables.sort()
+        print(variables)
         final_grid : list[list] = [[],[],[],[],[],[],[],[],[]]
         for var in variables:
             try:
                 cell = variable_to_cell(var)
+                print(cell)
                 final_grid[cell[0]].append(cell[2]+1)
             except:
                 print(cell, var)
