@@ -173,6 +173,12 @@ def print_graph(graph: list, path: str) -> None:
             sommets_colors[sommet] = color
     displayed_graph = nx.Graph()
 
+    tmp_color = sommets_colors[1]
+    for sommet in sommets_colors:
+        if sommet != 10:
+            sommets_colors[sommet] = sommets_colors[sommet+1]
+    sommets_colors[10] = tmp_color
+
     for sommet in sommets_colors:
         displayed_graph.add_node(sommet)
     for tup in graph:
