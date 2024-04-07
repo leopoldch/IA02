@@ -122,12 +122,12 @@ def create_value_constraints(grid: Grid):
     for line in range(9):
         for col in range(9):
             if grid[line][col] != 0:
-                cell = cell_to_variable(line, col, grid[line][col]-1)
+                cell = cell_to_variable(line, col, grid[line][col] - 1)
                 mystr += f"{cell} 0\n"
     return mystr
 
 
-def make_begin_file(nb_var: int, NBCLAUSES: int, filename : str) -> str:
+def make_begin_file(nb_var: int, NBCLAUSES: int, filename: str) -> str:
     """génération de l'entete"""
     my_line: str = ""
     my_line += f"c FILE: {filename}\n"
@@ -142,8 +142,7 @@ def make_begin_file(nb_var: int, NBCLAUSES: int, filename : str) -> str:
     return my_line
 
 
-
-def write_dimacs_file(dimacs:str, filename: str):
+def write_dimacs_file(dimacs: str, filename: str):
     """écriture dans le fichier"""
     with open(filename, "w", encoding="utf8") as file:
         file.write(dimacs)
@@ -153,7 +152,7 @@ def generate_problem(grid: Grid):
     """fonction principale"""
     global NBCLAUSES
     nb_var: int = 729
-    filename : str = "sudoku.cnf"
+    filename: str = "sudoku.cnf"
 
     constraints: str = ""
     tmp: str = ""
@@ -164,11 +163,12 @@ def generate_problem(grid: Grid):
     constraints += make_begin_file(nb_var, NBCLAUSES, filename)
     constraints += tmp
 
-    write_dimacs_file(constraints,filename)
+    write_dimacs_file(constraints, filename)
 
 
-
-def exec_gophersat(filename: str, cmd: str = "gophersat", encoding: str = "utf8") -> tuple[bool, list[int]]:
+def exec_gophersat(
+    filename: str, cmd: str = "gophersat", encoding: str = "utf8"
+) -> tuple[bool, list[int]]:
     """fonction pour run le solver"""
     process = subprocess.run(
         f"/Users/leo/go/bin/{cmd} {filename}",
@@ -181,38 +181,38 @@ def exec_gophersat(filename: str, cmd: str = "gophersat", encoding: str = "utf8"
     )
 
     returned_values: str = process.stdout
-    vals : list = returned_values.split("\n")
-    verif : str = vals[1]
-    if verif == 's UNSATISFIABLE':
+    vals: list = returned_values.split("\n")
+    verif: str = vals[1]
+    if verif == "s UNSATISFIABLE":
         return (False, [])
     else:
-        numbers : list[int] = []
+        numbers: list[int] = []
         vals = vals[2]
         vals = vals.split(" ")
         vals.pop(0)
-        vals.pop(len(vals)-1)
+        vals.pop(len(vals) - 1)
         for item in vals:
             if int(item) > 0:
                 numbers.append(int(item))
-        return(True, numbers)
+        return (True, numbers)
 
 
 def print_grid(grid: Grid):
-    my_str : str = ""
+    my_str: str = ""
     for line in range(9):
         my_str += "-------------------------\n"
-        my_str+="| "
+        my_str += "| "
         for col in range(9):
-            number : int = grid[line][col]
+            number: int = grid[line][col]
             if number == 0:
                 my_str += ". "
             else:
-                my_str+= f"{number} "
+                my_str += f"{number} "
             if col in [2, 5, 8]:
-                my_str+= "| "
-            if col==8:
-                my_str+="\n"
-    my_str+= "-------------------------\n"
+                my_str += "| "
+            if col == 8:
+                my_str += "\n"
+    my_str += "-------------------------\n"
     print(my_str)
 
 
@@ -221,26 +221,26 @@ def resolve(grid: Grid, filename: str):
     generate_problem(grid)
     response: tuple = exec_gophersat(filename)
     if response[0]:
-        variables : list[int] = response[1]
+        variables: list[int] = response[1]
         variables.sort()
         print(variables)
-        final_grid : list[list] = [[],[],[],[],[],[],[],[],[]]
+        final_grid: list[list] = [[], [], [], [], [], [], [], [], []]
         for var in variables:
             try:
                 cell = variable_to_cell(var)
                 print(cell)
-                final_grid[cell[0]].append(cell[2]+1)
+                final_grid[cell[0]].append(cell[2] + 1)
             except:
                 print(cell, var)
-        
+
         print("Problème initial : ")
         print_grid(grid)
         print("\n")
         print("Problème résolu : ")
         print_grid(final_grid)
 
-
     else:
         print("Non solvable.")
+
 
 resolve(grid_example, "sudoku.cnf")
