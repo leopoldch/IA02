@@ -5,7 +5,15 @@ import subprocess
 from itertools import combinations
 
 NBCLAUSES = 0
-Grid = list[list]
+
+
+# aliases de type
+Grid = list[list[int]]
+PropositionnalVariable = int
+Literal = int
+Clause = list[Literal]
+ClauseBase = list[Clause]
+Model = list[Literal]
 
 grid_example = [
     [5, 3, 0, 0, 7, 0, 0, 0, 0],
@@ -34,6 +42,10 @@ def variable_to_cell(value: int) -> tuple[int, int, int]:
     col: int = (v // 9) % 9
     line: int = v // 81
     return (line, col, returned_value)
+
+
+def model_to_grid(model: Model, nb_vals: int = 9) -> Grid:
+    pass
 
 
 def at_least_one(variables: list) -> list:
