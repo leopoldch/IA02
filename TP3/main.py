@@ -36,7 +36,7 @@ ClauseBase = list[Clause]
 Model = list[Literal]
 
 grid_example = [
-    [5, 0, 0, 0, 7, 0, 0, 0, 0],
+    [5, 3, 0, 0, 7, 0, 0, 0, 0],
     [6, 0, 0, 1, 9, 5, 0, 0, 0],
     [0, 9, 8, 0, 0, 0, 0, 6, 0],
     [8, 0, 0, 0, 6, 0, 0, 0, 3],
@@ -45,6 +45,30 @@ grid_example = [
     [0, 6, 0, 0, 0, 0, 2, 8, 0],
     [0, 0, 0, 4, 1, 9, 0, 0, 5],
     [0, 0, 0, 0, 8, 0, 0, 7, 9],
+]
+
+grid_example_2 = [
+    [4, 0, 0, 0, 0, 0, 0, 0, 8],
+    [0, 1, 0, 0, 9, 6, 0, 0, 0],
+    [0, 0, 3, 2, 0, 0, 6, 0, 1],
+    [5, 3, 1, 6, 0, 0, 0, 0, 0],
+    [6, 0, 0, 0, 3, 0, 0, 0, 0],
+    [0, 0, 0, 0, 4, 9, 0, 0, 0],
+    [1, 8, 5, 0, 6, 0, 0, 0, 4],
+    [0, 6, 2, 4, 0, 5, 0, 7, 0],
+    [0, 0, 0, 9, 0, 0, 0, 0, 0],
+]
+
+grid_hard = [
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 9, 6, 0, 0, 0],
+    [0, 0, 3, 2, 0, 0, 6, 0, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [6, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 4, 9, 0, 0, 0],
+    [1, 0, 0, 0, 6, 0, 0, 0, 4],
+    [0, 0, 2, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
 ]
 
 
@@ -266,7 +290,7 @@ def resolve(grid: Grid, filename: str):
     """fonction principale"""
     generate_problem(grid)
     response: tuple = exec_gophersat(filename)
-    nb_models = count_gophersat(filename)
+
     if response[0]:
         variables: Model = response[1]
         final_grid: Grid = model_to_grid(variables)
@@ -277,7 +301,17 @@ def resolve(grid: Grid, filename: str):
         print_grid(final_grid)
     else:
         print("Non solvable.")
-    print(f"Nombre de models : {nb_models}")
+    print(
+        "Voulez vous connaitre le nombre de models trouvés ?\
+            \nCette opération peut être longue", end=" "
+    )
+    verif = ""
+    while verif.lower() not in ["y", "n"]:
+        verif = str(input("[y/n]"))
+    if verif.lower() == "y":
+        nb_models = count_gophersat(filename)
+        print(f"Nombre de models : {nb_models}")
+    print("\nFin du programme")
 
 
 def count_gophersat(
@@ -300,4 +334,4 @@ def count_gophersat(
     return returned_values
 
 
-resolve(grid_example, "sudoku.cnf")
+resolve(grid_example_2, "sudoku.cnf")
