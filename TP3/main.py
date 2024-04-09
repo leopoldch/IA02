@@ -6,6 +6,7 @@ from itertools import combinations
 
 class Sudoku:
     """classe qui fait office de compteur"""
+
     def __init__(self) -> None:
         self.__nb_clauses = 0
         self.__nb_var = 729
@@ -35,7 +36,7 @@ ClauseBase = list[Clause]
 Model = list[Literal]
 
 grid_example = [
-    [5, 3, 0, 0, 7, 0, 0, 0, 0],
+    [5, 0, 0, 0, 7, 0, 0, 0, 0],
     [6, 0, 0, 1, 9, 5, 0, 0, 0],
     [0, 9, 8, 0, 0, 0, 0, 6, 0],
     [8, 0, 0, 0, 6, 0, 0, 0, 3],
@@ -265,6 +266,7 @@ def resolve(grid: Grid, filename: str):
     """fonction principale"""
     generate_problem(grid)
     response: tuple = exec_gophersat(filename)
+    nb_models = count_gophersat(filename)
     if response[0]:
         variables: Model = response[1]
         final_grid: Grid = model_to_grid(variables)
@@ -273,9 +275,29 @@ def resolve(grid: Grid, filename: str):
         print("\n")
         print("Problème résolu : ")
         print_grid(final_grid)
-
     else:
         print("Non solvable.")
+    print(f"Nombre de models : {nb_models}")
+
+
+def count_gophersat(
+    filename: str, cmd: str = "gophersat --count", encoding: str = "utf8"
+) -> tuple[bool, list[int]]:
+    """fonction pour run le solver"""
+    process = subprocess.run(
+        f"/Users/leo/go/bin/{cmd} {filename}",
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=True,
+        encoding=encoding,
+    )
+
+    returned_values: str = process.stdout
+    tab: list[str] = returned_values.split("\n")
+    returned_values = tab[1]
+    return returned_values
 
 
 resolve(grid_example, "sudoku.cnf")
