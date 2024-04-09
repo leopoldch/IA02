@@ -27,13 +27,11 @@ grid_example = [
     [0, 0, 0, 0, 8, 0, 0, 7, 9],
 ]
 
-
 def cell_to_variable(i: int, j: int, val: int) -> int:
     """passage d'une case à une valeur"""
     line = (i) * 81
     col = (j) * 9
     return line + col + val + 1
-
 
 def variable_to_cell(value: int) -> tuple[int, int, int]:
     """passage d'une valeur à une case"""
@@ -41,17 +39,20 @@ def variable_to_cell(value: int) -> tuple[int, int, int]:
     returned_value: int = v % 9
     col: int = (v // 9) % 9
     line: int = v // 81
+
     return (line, col, returned_value)
 
-
 def model_to_grid(model: Model, nb_vals: int = 9) -> Grid:
-    pass
-
+    main_tab : Grid = [[],[],[],[],[],[],[],[],[]]
+    for var in model:
+        if(var != 0):
+            cell : tuple = variable_to_cell(var)
+            main_tab[cell[0]].append(cell[2]+1)
+    return main_tab
 
 def at_least_one(variables: list) -> list:
     """at least one"""
     return variables
-
 
 def unique(variables: list) -> list:
     """contrainte d'unicité"""
@@ -62,7 +63,6 @@ def unique(variables: list) -> list:
         clauses.append([-item[0], -item[1]])
     return clauses
 
-
 def clauses_to_dimacs(tab: list) -> str:
     """Fonction qui permet de générer les clauses grâce à un tableau facilement"""
     global NBCLAUSES
@@ -72,7 +72,6 @@ def clauses_to_dimacs(tab: list) -> str:
     mystr += "0"
     NBCLAUSES = NBCLAUSES + 1
     return mystr
-
 
 def create_line_constraints() -> str:
     """créer les contraintes pour les lignes"""
@@ -105,7 +104,6 @@ def create_column_constraints() -> str:
                 mystr += clauses_to_dimacs(item) + "\n"
     return mystr
 
-
 def create_box_constraints() -> str:
     """créer les contraintes pour les box"""
     mystr: str = ""
@@ -127,7 +125,6 @@ def create_box_constraints() -> str:
                     mystr += clauses_to_dimacs(item) + "\n"
     return mystr
 
-
 def create_value_constraints(grid: Grid):
     """rajouter les contraintes sur les variables déjà connues"""
     mystr: str = ""
@@ -136,6 +133,20 @@ def create_value_constraints(grid: Grid):
             if grid[line][col] != 0:
                 cell = cell_to_variable(line, col, grid[line][col] - 1)
                 mystr += f"{cell} 0\n"
+    return mystr
+
+def create_variables_constraints() -> str:
+    """créer les contraintes pour les variables"""
+    mystr: str = ""
+    for col in range(9):
+        for line in range(9):
+            values: list = []
+            for val in range(9):
+                value: int = cell_to_variable(line, col, val)
+                values.append(value)
+            clauses: list = unique(values)
+            for item in clauses:
+                mystr += clauses_to_dimacs(item) + "\n"
     return mystr
 
 
@@ -153,12 +164,10 @@ def make_begin_file(nb_var: int, NBCLAUSES: int, filename: str) -> str:
     my_line += f"p cnf {nb_var} {NBCLAUSES}\n"
     return my_line
 
-
 def write_dimacs_file(dimacs: str, filename: str):
     """écriture dans le fichier"""
     with open(filename, "w", encoding="utf8") as file:
         file.write(dimacs)
-
 
 def generate_problem(grid: Grid):
     """fonction principale"""
@@ -171,12 +180,12 @@ def generate_problem(grid: Grid):
     tmp += create_column_constraints()
     tmp += create_line_constraints()
     tmp += create_box_constraints()
+    tmp += create_variables_constraints()
     tmp += create_value_constraints(grid)
     constraints += make_begin_file(nb_var, NBCLAUSES, filename)
     constraints += tmp
 
     write_dimacs_file(constraints, filename)
-
 
 def exec_gophersat(
     filename: str, cmd: str = "gophersat", encoding: str = "utf8"
@@ -233,18 +242,8 @@ def resolve(grid: Grid, filename: str):
     generate_problem(grid)
     response: tuple = exec_gophersat(filename)
     if response[0]:
-        variables: list[int] = response[1]
-        variables.sort()
-        print(variables)
-        final_grid: list[list] = [[], [], [], [], [], [], [], [], []]
-        for var in variables:
-            try:
-                cell = variable_to_cell(var)
-                print(cell)
-                final_grid[cell[0]].append(cell[2] + 1)
-            except:
-                print(cell, var)
-
+        variables: Model = response[1]
+        final_grid: Grid = model_to_grid(variables)
         print("Problème initial : ")
         print_grid(grid)
         print("\n")
@@ -256,3 +255,8 @@ def resolve(grid: Grid, filename: str):
 
 
 resolve(grid_example, "sudoku.cnf")
+
+
+
+
+
