@@ -4,12 +4,12 @@ import subprocess
 from itertools import combinations
 
 
-class Sudoku:
+class Compteur:
     """classe qui fait office de compteur"""
 
     def __init__(self) -> None:
-        self.__nb_clauses = 0
-        self.__nb_var = 729
+        self.__nb_clauses :int = 0
+        self.__nb_var:int = 729
 
     def add_clause(self) -> None:
         """setter pour les clauses"""
@@ -24,8 +24,7 @@ class Sudoku:
         return self.__nb_var
 
 
-compteur = Sudoku()
-
+compteur = Compteur()
 
 # aliases de type
 Grid = list[list[int]]
@@ -90,7 +89,7 @@ def variable_to_cell(value: int) -> tuple[int, int, int]:
 
 def model_to_grid(model: Model, nb_vals: int = 9) -> Grid:
     """passer d'un modèle à une grid"""
-    main_tab = [[] for _ in range(nb_vals)]
+    main_tab : Grid = [[] for _ in range(nb_vals)]
     for var in model:
         if var != 0:
             cell: tuple = variable_to_cell(var)
@@ -250,14 +249,14 @@ def exec_gophersat(
     )
 
     returned_values: str = process.stdout
-    vals: list = returned_values.split("\n")
+    vals: list[str] = returned_values.split("\n")
     verif: str = vals[1]
     if verif == "s UNSATISFIABLE":
         return (False, [])
 
     numbers: list[int] = []
-    vals = vals[2]
-    vals = vals.split(" ")
+    tmp : str  = vals[2]
+    vals = tmp.split(" ")
     vals.pop(0)
     vals.pop(len(vals) - 1)
     for item in vals:
@@ -316,7 +315,7 @@ def resolve(grid: Grid, filename: str):
 
 def count_gophersat(
     filename: str, cmd: str = "gophersat --count", encoding: str = "utf8"
-) -> tuple[bool, list[int]]:
+) -> str:
     """fonction pour run le solver"""
     process = subprocess.run(
         f"/Users/leo/go/bin/{cmd} {filename}",
@@ -333,5 +332,4 @@ def count_gophersat(
     returned_values = tab[1]
     return returned_values
 
-
-resolve(grid_example_2, "sudoku.cnf")
+resolve(grid_hard, "sudoku.cnf")
