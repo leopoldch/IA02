@@ -1,11 +1,8 @@
 """Fichier pour résoudre un sudoku avec le solveur SAT gophersat"""
-
-import os
 import subprocess
 from itertools import combinations
 
-NBCLAUSES = 0
-
+NB_CLAUSES = 0
 
 # aliases de type
 Grid = list[list[int]]
@@ -27,11 +24,13 @@ grid_example = [
     [0, 0, 0, 0, 8, 0, 0, 7, 9],
 ]
 
+
 def cell_to_variable(i: int, j: int, val: int) -> int:
     """passage d'une case à une valeur"""
     line = (i) * 81
     col = (j) * 9
     return line + col + val + 1
+
 
 def variable_to_cell(value: int) -> tuple[int, int, int]:
     """passage d'une valeur à une case"""
@@ -39,20 +38,18 @@ def variable_to_cell(value: int) -> tuple[int, int, int]:
     returned_value: int = v % 9
     col: int = (v // 9) % 9
     line: int = v // 81
-
     return (line, col, returned_value)
 
+
 def model_to_grid(model: Model, nb_vals: int = 9) -> Grid:
-    main_tab : Grid = [[],[],[],[],[],[],[],[],[]]
+    """passer d'un modèle à une grid"""
+    main_tab = [[] for _ in range(nb_vals)]
     for var in model:
-        if(var != 0):
-            cell : tuple = variable_to_cell(var)
-            main_tab[cell[0]].append(cell[2]+1)
+        if var != 0:
+            cell: tuple = variable_to_cell(var)
+            main_tab[cell[0]].append(cell[2] + 1)
     return main_tab
 
-def at_least_one(variables: list) -> list:
-    """at least one"""
-    return variables
 
 def unique(variables: list) -> list:
     """contrainte d'unicité"""
@@ -63,15 +60,17 @@ def unique(variables: list) -> list:
         clauses.append([-item[0], -item[1]])
     return clauses
 
+
 def clauses_to_dimacs(tab: list) -> str:
     """Fonction qui permet de générer les clauses grâce à un tableau facilement"""
-    global NBCLAUSES
+    global NB_CLAUSES
     mystr: str = ""
     for item in tab:
         mystr += f"{item} "
     mystr += "0"
-    NBCLAUSES = NBCLAUSES + 1
+    NB_CLAUSES = NB_CLAUSES + 1
     return mystr
+
 
 def create_line_constraints() -> str:
     """créer les contraintes pour les lignes"""
@@ -104,6 +103,7 @@ def create_column_constraints() -> str:
                 mystr += clauses_to_dimacs(item) + "\n"
     return mystr
 
+
 def create_box_constraints() -> str:
     """créer les contraintes pour les box"""
     mystr: str = ""
@@ -125,6 +125,7 @@ def create_box_constraints() -> str:
                     mystr += clauses_to_dimacs(item) + "\n"
     return mystr
 
+
 def create_value_constraints(grid: Grid):
     """rajouter les contraintes sur les variables déjà connues"""
     mystr: str = ""
@@ -134,6 +135,7 @@ def create_value_constraints(grid: Grid):
                 cell = cell_to_variable(line, col, grid[line][col] - 1)
                 mystr += f"{cell} 0\n"
     return mystr
+
 
 def create_variables_constraints() -> str:
     """créer les contraintes pour les variables"""
@@ -150,7 +152,7 @@ def create_variables_constraints() -> str:
     return mystr
 
 
-def make_begin_file(nb_var: int, NBCLAUSES: int, filename: str) -> str:
+def make_begin_file(nb_var: int, NB_CLAUSES: int, filename: str) -> str:
     """génération de l'entete"""
     my_line: str = ""
     my_line += f"c FILE: {filename}\n"
@@ -161,17 +163,19 @@ def make_begin_file(nb_var: int, NBCLAUSES: int, filename: str) -> str:
     my_line += "c \n"
     my_line += "c NOTE: Satisfiable \n"
     my_line += "c \n"
-    my_line += f"p cnf {nb_var} {NBCLAUSES}\n"
+    my_line += f"p cnf {nb_var} {NB_CLAUSES}\n"
     return my_line
+
 
 def write_dimacs_file(dimacs: str, filename: str):
     """écriture dans le fichier"""
     with open(filename, "w", encoding="utf8") as file:
         file.write(dimacs)
 
+
 def generate_problem(grid: Grid):
     """fonction principale"""
-    global NBCLAUSES
+    global NB_CLAUSES
     nb_var: int = 729
     filename: str = "sudoku.cnf"
 
@@ -182,10 +186,11 @@ def generate_problem(grid: Grid):
     tmp += create_box_constraints()
     tmp += create_variables_constraints()
     tmp += create_value_constraints(grid)
-    constraints += make_begin_file(nb_var, NBCLAUSES, filename)
+    constraints += make_begin_file(nb_var, NB_CLAUSES, filename)
     constraints += tmp
 
     write_dimacs_file(constraints, filename)
+
 
 def exec_gophersat(
     filename: str, cmd: str = "gophersat", encoding: str = "utf8"
@@ -206,19 +211,20 @@ def exec_gophersat(
     verif: str = vals[1]
     if verif == "s UNSATISFIABLE":
         return (False, [])
-    else:
-        numbers: list[int] = []
-        vals = vals[2]
-        vals = vals.split(" ")
-        vals.pop(0)
-        vals.pop(len(vals) - 1)
-        for item in vals:
-            if int(item) > 0:
-                numbers.append(int(item))
-        return (True, numbers)
+
+    numbers: list[int] = []
+    vals = vals[2]
+    vals = vals.split(" ")
+    vals.pop(0)
+    vals.pop(len(vals) - 1)
+    for item in vals:
+        if int(item) > 0:
+            numbers.append(int(item))
+    return (True, numbers)
 
 
 def print_grid(grid: Grid):
+    """permet d'afficher une grille facilement"""
     my_str: str = ""
     for line in range(9):
         my_str += "-------------------------\n"
@@ -255,8 +261,3 @@ def resolve(grid: Grid, filename: str):
 
 
 resolve(grid_example, "sudoku.cnf")
-
-
-
-
-
