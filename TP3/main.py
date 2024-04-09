@@ -1,8 +1,30 @@
 """Fichier pour résoudre un sudoku avec le solveur SAT gophersat"""
+
 import subprocess
 from itertools import combinations
 
-NB_CLAUSES = 0
+
+class Sudoku:
+    """classe qui fait office de compteur"""
+    def __init__(self) -> None:
+        self.__nb_clauses = 0
+        self.__nb_var = 729
+
+    def add_clause(self) -> None:
+        """setter pour les clauses"""
+        self.__nb_clauses += 1
+
+    def get_clause(self) -> int:
+        """getter pour les clauses"""
+        return self.__nb_clauses
+
+    def get_var(self) -> int:
+        """getter pour le nombre de variables"""
+        return self.__nb_var
+
+
+compteur = Sudoku()
+
 
 # aliases de type
 Grid = list[list[int]]
@@ -63,12 +85,11 @@ def unique(variables: list) -> list:
 
 def clauses_to_dimacs(tab: list) -> str:
     """Fonction qui permet de générer les clauses grâce à un tableau facilement"""
-    global NB_CLAUSES
     mystr: str = ""
     for item in tab:
         mystr += f"{item} "
     mystr += "0"
-    NB_CLAUSES = NB_CLAUSES + 1
+    compteur.add_clause()
     return mystr
 
 
@@ -152,7 +173,7 @@ def create_variables_constraints() -> str:
     return mystr
 
 
-def make_begin_file(nb_var: int, NB_CLAUSES: int, filename: str) -> str:
+def make_begin_file(nb_var: int, nb_clauses: int, filename: str) -> str:
     """génération de l'entete"""
     my_line: str = ""
     my_line += f"c FILE: {filename}\n"
@@ -163,7 +184,7 @@ def make_begin_file(nb_var: int, NB_CLAUSES: int, filename: str) -> str:
     my_line += "c \n"
     my_line += "c NOTE: Satisfiable \n"
     my_line += "c \n"
-    my_line += f"p cnf {nb_var} {NB_CLAUSES}\n"
+    my_line += f"p cnf {nb_var} {nb_clauses}\n"
     return my_line
 
 
@@ -175,10 +196,7 @@ def write_dimacs_file(dimacs: str, filename: str):
 
 def generate_problem(grid: Grid):
     """fonction principale"""
-    global NB_CLAUSES
-    nb_var: int = 729
     filename: str = "sudoku.cnf"
-
     constraints: str = ""
     tmp: str = ""
     tmp += create_column_constraints()
@@ -186,7 +204,7 @@ def generate_problem(grid: Grid):
     tmp += create_box_constraints()
     tmp += create_variables_constraints()
     tmp += create_value_constraints(grid)
-    constraints += make_begin_file(nb_var, NB_CLAUSES, filename)
+    constraints += make_begin_file(compteur.get_var(), compteur.get_clause(), filename)
     constraints += tmp
 
     write_dimacs_file(constraints, filename)
