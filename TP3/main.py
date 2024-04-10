@@ -71,6 +71,7 @@ grid_hard = [
 ]
 
 
+
 def cell_to_variable(i: int, j: int, val: int) -> int:
     """passage d'une case à une valeur"""
     line = (i) * 81
@@ -106,6 +107,11 @@ def unique(variables: list) -> list:
         clauses.append([-item[0], -item[1]])
     return clauses
 
+def at_least_one(variables: list) -> list:
+    """at least one"""
+    clauses : list = []
+    clauses.append(variables)
+    return clauses
 
 def clauses_to_dimacs(tab: list) -> str:
     """Fonction qui permet de générer les clauses grâce à un tableau facilement"""
@@ -127,7 +133,7 @@ def create_line_constraints() -> str:
             for col in range(9):
                 value: int = cell_to_variable(line, col, val)
                 values.append(value)
-            clauses: list = unique(values)
+            clauses: list = at_least_one(values)
             for item in clauses:
                 mystr += clauses_to_dimacs(item) + "\n"
     return mystr
@@ -135,7 +141,6 @@ def create_line_constraints() -> str:
 
 def create_column_constraints() -> str:
     """créer les contraintes pour les colones"""
-
     mystr: str = ""
     for col in range(9):
         for val in range(9):
@@ -143,7 +148,7 @@ def create_column_constraints() -> str:
             for line in range(9):
                 value: int = cell_to_variable(line, col, val)
                 values.append(value)
-            clauses: list = unique(values)
+            clauses: list = at_least_one(values)
             for item in clauses:
                 mystr += clauses_to_dimacs(item) + "\n"
     return mystr
@@ -166,7 +171,7 @@ def create_box_constraints() -> str:
                                 line + box_line * 3, col + box_col * 3, val
                             )
                         )
-                for item in unique(cells):
+                for item in at_least_one(cells):
                     mystr += clauses_to_dimacs(item) + "\n"
     return mystr
 
@@ -223,10 +228,10 @@ def generate_problem(grid: Grid):
     filename: str = "sudoku.cnf"
     constraints: str = ""
     tmp: str = ""
-    tmp += create_column_constraints()
-    tmp += create_line_constraints()
-    tmp += create_box_constraints()
-    tmp += create_variables_constraints()
+    tmp += create_column_constraints() # 3k
+    tmp += create_line_constraints()  # 3k 
+    tmp += create_box_constraints()   # 3k
+    tmp += create_variables_constraints() #3k
     tmp += create_value_constraints(grid)
     constraints += make_begin_file(compteur.get_var(), compteur.get_clause(), filename)
     constraints += tmp
@@ -332,4 +337,4 @@ def count_gophersat(
     returned_values = tab[1]
     return returned_values
 
-resolve(grid_hard, "sudoku.cnf")
+resolve(grid_example_2, "sudoku.cnf")
