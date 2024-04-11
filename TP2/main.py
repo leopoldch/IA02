@@ -173,12 +173,6 @@ def print_graph(graph: list, path: str) -> None:
             sommets_colors[sommet] = color
     displayed_graph = nx.Graph()
 
-    tmp_color = sommets_colors[1]
-    for sommet in sommets_colors:
-        if sommet != 10:
-            sommets_colors[sommet] = sommets_colors[sommet+1]
-    sommets_colors[10] = tmp_color
-
     for sommet in sommets_colors:
         displayed_graph.add_node(sommet)
     for tup in graph:
@@ -194,7 +188,94 @@ def print_graph(graph: list, path: str) -> None:
     plt.show()
 
 
+def models_amount() -> None:
+    """compte le nombre de modeles"""
+    x = 3  # x représente l'indice chromatique
+    var = (
+        (x - 2)
+        * (x - 1)
+        * x
+        * (
+            x**7
+            - 12 * x**6
+            + 67 * x**5
+            - 230 * x**4
+            + 529 * x**3
+            - 814 * x**2
+            + 775 * x
+            - 352
+        )
+    )
+    print(var)
+
+
+def add_constraint(constraint: list) -> None:
+    """cette fonction doit ajouter des contraintes au format DIMACS"""
+    temp: str = ""
+    if len(constraint) > 0:
+        for item in constraint:
+            if item < 0:
+                temp += f"{abs(item)} "
+            else:
+                temp += f"-{item} "
+        temp += " 0\n"
+        with open("graph_gen.cnf", "a", encoding="utf8") as file:
+            file.write(temp)
+
+
+def force_amount_models(graph: list, path: str) -> None:
+    """Compte le nombre de modèle avec gophersat"""
+
+    color_graph(graph)
+    process = subprocess.run(
+        f"/Users/leo/go/bin/gophersat {path}",
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=True,
+    )
+
+    returned_values: str = process.stdout
+    temp: list = returned_values.split("\n")
+    verif: str = temp[1]
+    results = temp[2].replace("v", "").split(" ")
+    results.remove("")
+    results.pop(len(results) - 1)
+    newtab: list[int] = []
+    for item in results:
+        newtab.append(int(item))
+    models: int = 0
+
+    while verif == "s SATISFIABLE":
+        process = subprocess.run(
+            f"/Users/leo/go/bin/gophersat {path}",
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True,
+        )
+
+        returned_values = process.stdout
+        temp = returned_values.split("\n")
+        verif = temp[1]
+        if verif == "s SATISFIABLE":
+            results = temp[2].replace("v", "").split(" ")
+            results.remove("")
+            results.pop(len(results) - 1)
+            newtab = []
+            for item in results:
+                newtab.append(int(item))
+            add_constraint(newtab)
+            models += 1
+
+    print(models)
+
+
 # exo1()
 
-color_graph(graph1)
-print_graph(graph1, "/Users/leo/Documents/UTC/IA02/TP2/graph_gen.cnf")
+# color_graph(graph1)
+
+force_amount_models(graph1, "/Users/leo/Documents/UTC/IA02/TP2/graph_gen.cnf")
+# print_graph(graph1, "/Users/leo/Documents/UTC/IA02/TP2/graph_gen.cnf")
