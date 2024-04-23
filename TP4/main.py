@@ -6,9 +6,11 @@ import math
 import time
 import random
 
+
 def clear():
     """clear console"""
     os.system("clear")
+
 
 # Defined types
 Grid = tuple[tuple[int, ...], ...]
@@ -32,10 +34,11 @@ def grid_tuple_to_grid_list(grid: Grid) -> list[list[int]]:
 
 def grid_list_to_grid_tuple(grid: list[list[int]]) -> Grid:
     """Converting grid to tuple"""
-    main_grid = grid
-    for i, item in enumerate(main_grid):
-        main_grid[i] = tuple(item)
-    return tuple(main_grid)
+    return (
+        (grid[0][0], grid[0][1], grid[0][2]),
+        (grid[1][0], grid[1][1], grid[1][2]),
+        (grid[2][0], grid[2][1], grid[2][2]),
+    )
 
 
 def check_line(grid: State, player: Player) -> bool:
@@ -72,6 +75,7 @@ def final(grid: State) -> bool:
     """verify if a player has won"""
     # players can be 1 or 2
     verif: bool = not legals(grid)
+
     return line(grid, 1) or line(grid, 2) or verif
 
 
@@ -103,14 +107,14 @@ def legals(grid: State) -> list[Action]:
     for i in range(3):
         for j in range(3):
             if grid[i][j] == 0:
-                actions.append([i, j])
+                actions.append((i, j))
     return actions
 
 
 def play(grid: State, player: Player, action: Action) -> State:
     """effectuer une action si elle est possible"""
     my_grid = grid_tuple_to_grid_list(grid)
-    if list(action) in legals(grid):
+    if action in legals(grid):
         my_grid[action[0]][action[1]] = player
         return grid_list_to_grid_tuple(my_grid)
 
@@ -121,7 +125,7 @@ def input_to_action(my_input: int) -> Action:
     """convert input to action"""
     col = my_input % 3
     l = math.floor(my_input / 3)
-    action: Action = [l, col]
+    action: Action = (l, col)
     return action
 
 
@@ -149,7 +153,7 @@ def strategy_brain(grid: Grid, player: Player) -> Action:
 def strategy_first_legal(grid: State, player: Player) -> Action:
     """strategy first legal choice"""
     legals_choices: list[Action] = legals(grid)
-    choice : Action = legals_choices[0]
+    choice: Action = legals_choices[0]
     print(f"\nChoix du joueur {player} : {choice}")
     time.sleep(1.5)
     return choice
@@ -159,7 +163,7 @@ def strategy_random(grid: State, player: Player) -> Action:
     """strategy random choice"""
     legals_choices: list[Action] = legals(grid)
     nb: int = random.randint(0, len(legals_choices) - 1)
-    choice : Action = legals_choices[nb]
+    choice: Action = legals_choices[nb]
     print(f"\nChoix du joueur {player} : {choice}")
     time.sleep(1.5)
     return choice
@@ -171,9 +175,10 @@ def tictactoe(strategy_x: Strategy, strategy_o: Strategy, debug: bool = False) -
     player1: Player = 1
     player2: Player = 2
     current: Player = 1
+    action: Action
     while final(grid) == debug:
         if current == player1:
-            action: Action = strategy_x(grid, player1)
+            action = strategy_x(grid, player1)
             try:
                 grid = play(grid, player1, action)
             except ValueError:
@@ -182,9 +187,9 @@ def tictactoe(strategy_x: Strategy, strategy_o: Strategy, debug: bool = False) -
                     "\n\nAction impossible, la case est déjà prise, retentez votre coup"
                 )
                 time.sleep(1.5)
-                current: Player = 2  # permet de ne pas changer de joueur à l'exception
+                current = 2  # permet de ne pas changer de joueur à l'exception
         else:
-            action: Action = strategy_o(grid, player2)
+            action = strategy_o(grid, player2)
             try:
                 grid = play(grid, player2, action)
             except ValueError:
@@ -193,7 +198,7 @@ def tictactoe(strategy_x: Strategy, strategy_o: Strategy, debug: bool = False) -
                     "\n\nAction impossible, la case est déjà prise, retentez votre coup"
                 )
                 time.sleep(1.5)
-                current: Player = 1  # permet de ne pas changer de joueur à l'exception
+                current = 1  # permet de ne pas changer de joueur à l'exception
         if current == player1:
             current = player2
         else:
@@ -207,6 +212,8 @@ def tictactoe(strategy_x: Strategy, strategy_o: Strategy, debug: bool = False) -
         print("\nLe joueur2 gagne !")
     else:
         print("\n=============== MATCH NUL ===============")
+
+    return score(grid)
 
 
 tictactoe(strategy_brain, strategy_random)
