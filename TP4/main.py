@@ -79,11 +79,13 @@ def final(grid: State) -> bool:
     return line(grid, 1) or line(grid, 2) or verif
 
 
-def score(grid: State) -> float:
-    """returns"""
-    if line(grid, 1) or line(grid, 2):
+def score(grid: State, player : Player) -> float:
+    """returns score"""
+    if not line(grid, 1) and not line(grid,2):
+        return 0
+    if line(grid, player):
         return 1
-    return 0
+    return -1
 
 
 def pprint(grid: State):
@@ -169,6 +171,124 @@ def strategy_random(grid: State, player: Player) -> Action:
     return choice
 
 
+
+
+def minmax(grid: State, player: Player) -> float:
+    """basic min max"""
+    player1 : Player = 1
+    player2 : Player = 2
+    if final(grid):
+        return score(grid, player1)
+    
+    if player == 1: # maximazing player 
+         best = float('-inf') 
+         possibilities : list[Action] = legals(grid)
+         print("joueur1",possibilities)
+         for item in possibilities:
+             tmp = play(grid, player,item)
+             val = minmax(tmp,player2)
+             if max(best, val) == val:
+                 best = val
+         return best
+    
+    elif player == 2: # minimizing player
+         best = float('inf') 
+         possibilities : list[Action] = legals(grid)
+         print("joueur2",possibilities)
+         for item in possibilities:
+             tmp = play(grid, player,item)
+             val = minmax(tmp,player1)
+             if min(best, val) == val:
+                 best = val
+         return best
+    else:
+        raise ValueError("erreur pas de joeur connu")
+
+
+def minmax_action(grid: State, player: Player, depth: int = 0) -> tuple[float, Action]:
+    """explore possibilities"""
+
+    player1 : Player = 1
+    player2 : Player = 2
+
+    if depth == 0 or final(grid):
+        return (score(grid, player1), None)
+    
+    if player == 1: # maximazing player 
+         best = (float('-inf'), None) 
+         for item in legals(grid):
+             tmp = play(grid, player,item)
+             returned_values = minmax_action(tmp,player2, depth-1)
+             if max(best[0], returned_values[0]) == returned_values[0]:
+                 best = (returned_values[0],item)
+         return best
+    
+    elif player == 2: # minimizing player
+         best = (float('inf'), None)
+         for item in legals(grid):
+             tmp = play(grid, player,item)
+             returned_values = minmax_action(tmp,player1, depth-1)
+             if min(best[0], returned_values[0]) == returned_values[0]:
+                 best = (returned_values[0],item)
+         return best
+
+
+def strategy_minmax(grid: State, player: Player) -> Action:
+    """strategy with min max evaluation"""
+
+    choice: Action = minmax_action(grid,player,9)[1]
+    print(f"\nChoix du joueur {player} : {choice}")
+    time.sleep(1.5)
+
+    return choice
+
+
+def minmax_actions(grid: State, player: Player, depth: int = 0) -> tuple[float, list[Action]]:
+    """indeterminist min-max"""
+    player1 : Player = 1
+    player2 : Player = 2
+
+    if depth == 0 or final(grid):
+        return (score(grid, player1), [])
+    
+    if player == 1: # maximazing player 
+         best = (float('-inf'), []) 
+         for item in legals(grid):
+             tmp = play(grid, player,item)
+             returned_values = minmax_actions(tmp,player2, depth-1)
+             if max(best[0], returned_values[0]) == returned_values[0] and returned_values[0]:
+                 tab : list[Action] = returned_values[1]
+                 tab.append(item)
+                 best = (returned_values[0],tab)         
+         return best
+    
+    elif player == 2: # minimizing player
+         best = (float('inf'), [])
+         for item in legals(grid):
+             tmp = play(grid, player,item)
+             returned_values = minmax_actions(tmp,player1, depth-1)
+             if min(best[0], returned_values[0]) == returned_values[0] and returned_values[0]:
+                 tab : list[Action] = returned_values[1]
+                 tab.append(item)
+                 best = (returned_values[0],tab)
+         return best
+
+
+
+#tab : State = ((0,0,1),(0,0,2),(0,1,2))
+#print(minmax_actions(tab,1,9))   
+
+
+def strategy_minmax_random(grid: State, player: Player) -> Action:
+    """strategy with min max evaluation"""
+    returned_values : tuple[float, list[Action]] = minmax_actions(grid,player,9)
+    nb : int = random.randint(0,len(returned_values[1])-1)
+    choice: Action = returned_values[1][nb]
+    print(f"\nChoix du joueur {player} : {choice}")
+    time.sleep(1.5)
+    return choice
+
+
 def tictactoe(strategy_x: Strategy, strategy_o: Strategy, debug: bool = False) -> Score:
     """main game function"""
     grid: State = ((0, 0, 0), (0, 0, 0), (0, 0, 0))
@@ -213,7 +333,7 @@ def tictactoe(strategy_x: Strategy, strategy_o: Strategy, debug: bool = False) -
     else:
         print("\n=============== MATCH NUL ===============")
 
-    return score(grid)
+    return score(grid, player1)
 
-
-tictactoe(strategy_brain, strategy_random)
+# warning strategy_minmax must concerns player 1 
+print(tictactoe(strategy_minmax_random, strategy_brain))
