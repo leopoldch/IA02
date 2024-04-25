@@ -346,10 +346,13 @@ def alpha_beta(
 
     raise ValueError("erreur pas de joeur connu")
 
+def strategy_alphabeta(grid: State, player: Player) -> Action:
+    """strategy with alpha evaluation"""
 
-tab2: State = ((0, 2, 1), (0, 0, 0), (1, 2, 2))
-print(alpha_beta(tab2, 1, float("-inf"), float("inf"), 9))
-
+    choice: Action = alpha_beta(grid, player, float("-inf"), float("inf"), 9)[1]
+    print(f"\nChoix du joueur {player} : {choice}")
+    time.sleep(1.5)
+    return choice
 
 # ========================== JEU PRINCIPAL ==========================
 def tictactoe(strategy_x: Strategy, strategy_o: Strategy, debug: bool = False) -> Score:
@@ -400,4 +403,4 @@ def tictactoe(strategy_x: Strategy, strategy_o: Strategy, debug: bool = False) -
 
 
 # warning strategy_minmax must concerns player 1
-# print("Score : ", tictactoe(strategy_minmax_random, strategy_minmax_random))
+print("Score : ", tictactoe(strategy_alphabeta, strategy_minmax_random))
