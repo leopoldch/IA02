@@ -171,12 +171,13 @@ def strategy_random(grid: State, player: Player) -> Action:
     return choice
 
 
+# ========================== MIN MAX ==========================
 def minmax(grid: State, player: Player) -> float:
     """basic min max"""
     player1: Player = 1
     player2: Player = 2
     possibilities: list[Action]
-    best : float
+    best: float
     if final(grid):
         return score(grid, player1)
 
@@ -205,18 +206,19 @@ def minmax(grid: State, player: Player) -> float:
     raise ValueError("erreur pas de joeur connu")
 
 
+# ========================== MIN MAX AVEC DEPTH ==========================
 def minmax_action(grid: State, player: Player, depth: int = 0) -> tuple[float, Action]:
     """explore possibilities"""
 
     player1: Player = 1
     player2: Player = 2
-    best : tuple[float, Action]
+    best: tuple[float, Action]
 
     if depth == 0 or final(grid):
-        return (score(grid, player1), (-1,-1))
+        return (score(grid, player1), (-1, -1))
 
     if player == 1:  # maximazing player
-        best = (float("-inf"), (-1,-1))
+        best = (float("-inf"), (-1, -1))
         for item in legals(grid):
             tmp = play(grid, player, item)
             returned_values = minmax_action(tmp, player2, depth - 1)
@@ -225,7 +227,7 @@ def minmax_action(grid: State, player: Player, depth: int = 0) -> tuple[float, A
         return best
 
     if player == 2:  # minimizing player
-        best = (float("inf"), (-1,-1))
+        best = (float("inf"), (-1, -1))
         for item in legals(grid):
             tmp = play(grid, player, item)
             returned_values = minmax_action(tmp, player1, depth - 1)
@@ -245,49 +247,54 @@ def strategy_minmax(grid: State, player: Player) -> Action:
     return choice
 
 
+# ========================== MIN MAX RANDOM ==========================
 def minmax_actions(
     grid: State, player: Player, depth: int = 0
 ) -> tuple[float, list[Action]]:
     """indeterminist min-max"""
     player1: Player = 1
     player2: Player = 2
-    tab: list[Action]
-    best : tuple[float, list[Action]]
+    tab: list[Action] = []
+    best: tuple[float, list[Action]]
     if depth == 0 or final(grid):
         return (score(grid, player1), [])
 
     if player == 1:  # maximazing player
         best = (float("-inf"), [])
+        tab = []
         for item in legals(grid):
             tmp = play(grid, player, item)
             returned_values = minmax_actions(tmp, player2, depth - 1)
             if (
                 max(best[0], returned_values[0]) == returned_values[0]
-                and returned_values[0]
+                or returned_values[0] == best[0]
             ):
-                tab = returned_values[1]
-                tab.append(item)
+                if depth == 9:
+                    if returned_values[0] != best[0]:
+                        tab = []
+                    tab.append(item)
+                    best = (returned_values[0], tab)
                 best = (returned_values[0], tab)
         return best
 
     if player == 2:  # minimizing player
         best = (float("inf"), [])
+        tab = []
         for item in legals(grid):
             tmp = play(grid, player, item)
             returned_values = minmax_actions(tmp, player1, depth - 1)
             if (
                 min(best[0], returned_values[0]) == returned_values[0]
-                and returned_values[0]
+                or returned_values[0] == best[0]
             ):
-                tab = returned_values[1]
-                tab.append(item)
+                if depth == 9:
+                    if returned_values[0] != best[0]:
+                        tab = []
+                    tab.append(item)
+                    best = (returned_values[0], tab)
                 best = (returned_values[0], tab)
         return best
     raise ValueError("erreur pas de joeur connu")
-
-
-# tab : State = ((0,0,1),(0,0,2),(0,1,2))
-# print(minmax_actions(tab,1,9))
 
 
 def strategy_minmax_random(grid: State, player: Player) -> Action:
@@ -300,6 +307,51 @@ def strategy_minmax_random(grid: State, player: Player) -> Action:
     return choice
 
 
+# ========================== ALPHA BETA ==========================
+def alpha_beta(
+    grid: State, player: Player, alpha: float, beta: float, depth: int = 0
+) -> tuple[float, Action]:
+    """explore possibilities"""
+
+    player1: Player = 1
+    player2: Player = 2
+    best: tuple[float, Action]
+
+    if depth == 0 or final(grid):
+        return (score(grid, player1), (-1, -1))
+
+    if player == 1:  # maximazing player
+        best = (float("-inf"), (-1, -1))
+        for item in legals(grid):
+            tmp = play(grid, player, item)
+            returned_values = alpha_beta(tmp, player2, alpha, beta, depth - 1)
+            alpha = max(alpha, returned_values[0])
+            if alpha >= beta:
+                break
+            if max(best[0], returned_values[0]) == returned_values[0]:
+                best = (returned_values[0], item)
+        return best
+
+    if player == 2:  # minimizing player
+        best = (float("inf"), (-1, -1))
+        for item in legals(grid):
+            tmp = play(grid, player, item)
+            returned_values = alpha_beta(tmp, player1, alpha, beta, depth - 1)
+            beta = min(beta, returned_values[0])
+            if alpha >= beta:
+                break
+            if min(best[0], returned_values[0]) == returned_values[0]:
+                best = (returned_values[0], item)
+        return best
+
+    raise ValueError("erreur pas de joeur connu")
+
+
+tab2: State = ((0, 2, 1), (0, 0, 0), (1, 2, 2))
+print(alpha_beta(tab2, 1, float("-inf"), float("inf"), 9))
+
+
+# ========================== JEU PRINCIPAL ==========================
 def tictactoe(strategy_x: Strategy, strategy_o: Strategy, debug: bool = False) -> Score:
     """main game function"""
     grid: State = ((0, 0, 0), (0, 0, 0), (0, 0, 0))
@@ -348,4 +400,4 @@ def tictactoe(strategy_x: Strategy, strategy_o: Strategy, debug: bool = False) -
 
 
 # warning strategy_minmax must concerns player 1
-print(tictactoe(strategy_minmax, strategy_brain))
+# print("Score : ", tictactoe(strategy_minmax_random, strategy_minmax_random))
