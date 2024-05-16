@@ -20,6 +20,87 @@ Player = int
 Score = float
 Strategy = Callable[[Grid, Player], Action]
 
+def memoize(
+    f: Callable[[State, Player,int], tuple[Score, Action]]
+) -> Callable[[State, Player,int], tuple[Score, Action]]:
+    
+    # max in cache 1000 ?
+    
+    cache = {} # closure
+
+    # ajouter de la symétrie ?
+    # principe on tourne la grille 3 fois pour voir si cette grille n'est pas présente en cache
+
+    def g(state: State, player: Player,depth:int):
+        
+        state_inverted : State = (state[2],state[1],state[0])
+        state_right_tmp : list[list] = [[],[],[]]
+        state_left_tmp : list[list] = [[],[],[]]
+        state_vert_tmp : list[list] = [[],[],[]]
+
+        ren : int = len(state)
+        for i in range(ren):
+            for j in range(ren):
+                state_right_tmp[j].append(state[i][j])
+                state_left_tmp[j].append(state[ren-1-i][j])
+                state_vert_tmp[i].append(state[i][ren-1-j])
+
+        
+        state_vert : State = grid_list_to_grid_tuple(state_vert_tmp)
+        state_right : State = grid_list_to_grid_tuple(state_right_tmp)
+        state_left : State = grid_list_to_grid_tuple(state_left_tmp)
+
+        if state in cache:
+            return cache[state]
+        elif state_inverted in cache:
+            returned = cache[state_inverted]
+            value : list[int] = [returned[1][0],returned[1][1]]
+            if value[0] == 2:
+                value[0] = 0
+            elif value[0] == 0:
+                value[0] = 2
+            
+            tup : Action = (value[0],value[1])
+            return (returned[0],tup)
+
+        elif state_left in cache:
+            returned = cache[state_left]
+            value : list[int] = [returned[1][0],returned[1][1]]
+            final : list[int] = []
+            if value[1] == 2:
+                final.append(0)
+            elif value[1] == 0:
+                final.append(2)
+            else:
+                final.append(1)
+            final.append(value[0])
+
+            tup : Action = (final[0],final[1])
+
+            return (returned[0],tup)
+
+        elif state_right in cache:
+            returned = cache[state_right]
+            value : list[int] = [returned[1][0],returned[1][1]]
+            tup : Action = (value[1],value[0])
+            return (returned[0],tup)
+
+        elif state_vert in cache:
+
+            returned = cache[state_vert]
+            value : list[int] = [returned[1][0],returned[1][1]]
+            if value[1] == 2:
+                value[1] = 0
+            elif value[1] == 0:
+                value[1] = 2
+            return (returned[0],(value[0],value[1]))
+
+
+        val = f(state, player,depth)
+        cache[state] = val
+        return val
+    return g
+
 
 def grid_tuple_to_grid_list(grid: Grid) -> list[list[int]]:
     """Converting tuple to grid"""
@@ -157,7 +238,6 @@ def strategy_first_legal(grid: State, player: Player) -> Action:
     legals_choices: list[Action] = legals(grid)
     choice: Action = legals_choices[0]
     print(f"\nChoix du joueur {player} : {choice}")
-    time.sleep(1.5)
     return choice
 
 
@@ -167,7 +247,6 @@ def strategy_random(grid: State, player: Player) -> Action:
     nb: int = random.randint(0, len(legals_choices) - 1)
     choice: Action = legals_choices[nb]
     print(f"\nChoix du joueur {player} : {choice}")
-    time.sleep(1.5)
     return choice
 
 
@@ -207,6 +286,7 @@ def minmax(grid: State, player: Player) -> float:
 
 
 # ========================== MIN MAX AVEC DEPTH ==========================
+@memoize
 def minmax_action(grid: State, player: Player, depth: int = 0) -> tuple[float, Action]:
     """explore possibilities"""
 
@@ -239,11 +319,8 @@ def minmax_action(grid: State, player: Player, depth: int = 0) -> tuple[float, A
 
 def strategy_minmax(grid: State, player: Player) -> Action:
     """strategy with min max evaluation"""
-
     choice: Action = minmax_action(grid, player, 9)[1]
     print(f"\nChoix du joueur {player} : {choice}")
-    time.sleep(1.5)
-
     return choice
 
 
@@ -303,7 +380,6 @@ def strategy_minmax_random(grid: State, player: Player) -> Action:
     nb: int = random.randint(0, len(returned_values[1]) - 1)
     choice: Action = returned_values[1][nb]
     print(f"\nChoix du joueur {player} : {choice}")
-    time.sleep(1.5)
     return choice
 
 
@@ -316,6 +392,8 @@ def alpha_beta(
     player1: Player = 1
     player2: Player = 2
     best: tuple[float, Action]
+    b : float = beta
+    a : float = alpha
 
     if depth == 0 or final(grid):
         return (score(grid, player1), (-1, -1))
@@ -324,34 +402,32 @@ def alpha_beta(
         best = (float("-inf"), (-1, -1))
         for item in legals(grid):
             tmp = play(grid, player, item)
-            returned_values = alpha_beta(tmp, player2, alpha, beta, depth - 1)
-            alpha = max(alpha, returned_values[0])
-            if alpha >= beta:
-                break
+            returned_values = alpha_beta(tmp, player2, a, b, depth - 1)
             if max(best[0], returned_values[0]) == returned_values[0]:
                 best = (returned_values[0], item)
+            a = max(a, best[0])
+            if a >= b:
+                break
         return best
 
     if player == 2:  # minimizing player
         best = (float("inf"), (-1, -1))
         for item in legals(grid):
             tmp = play(grid, player, item)
-            returned_values = alpha_beta(tmp, player1, alpha, beta, depth - 1)
-            beta = min(beta, returned_values[0])
-            if alpha >= beta:
-                break
+            returned_values = alpha_beta(tmp, player1, a, b, depth - 1)
             if min(best[0], returned_values[0]) == returned_values[0]:
                 best = (returned_values[0], item)
+            b = min(b, best[0])
+            if a >= b:
+                break
         return best
 
     raise ValueError("erreur pas de joeur connu")
 
 def strategy_alphabeta(grid: State, player: Player) -> Action:
     """strategy with alpha evaluation"""
-
     choice: Action = alpha_beta(grid, player, float("-inf"), float("inf"), 9)[1]
     print(f"\nChoix du joueur {player} : {choice}")
-    time.sleep(1.5)
     return choice
 
 # ========================== JEU PRINCIPAL ==========================
@@ -368,7 +444,7 @@ def tictactoe(strategy_x: Strategy, strategy_o: Strategy, debug: bool = False) -
             try:
                 grid = play(grid, player1, action)
             except ValueError:
-                clear()
+                #clear()
                 print(
                     "\n\nAction impossible, la case est déjà prise, retentez votre coup"
                 )
@@ -379,7 +455,7 @@ def tictactoe(strategy_x: Strategy, strategy_o: Strategy, debug: bool = False) -
             try:
                 grid = play(grid, player2, action)
             except ValueError:
-                clear()
+                #clear()
                 print(
                     "\n\nAction impossible, la case est déjà prise, retentez votre coup"
                 )
@@ -389,7 +465,7 @@ def tictactoe(strategy_x: Strategy, strategy_o: Strategy, debug: bool = False) -
             current = player2
         else:
             current = player1
-    clear()
+    #clear()
     print("Grid State : \n")
     pprint(grid)
     if line(grid, player1):
@@ -402,5 +478,17 @@ def tictactoe(strategy_x: Strategy, strategy_o: Strategy, debug: bool = False) -
     return score(grid, player1)
 
 
-# warning strategy_minmax must concerns player 1
-print("Score : ", tictactoe(strategy_alphabeta, strategy_minmax_random))
+v = 0
+e = 0
+d = 0
+start = time.time()
+for i in range(10000):
+    val = tictactoe(strategy_random, strategy_minmax)
+    if val == 1:
+        d+=1
+    elif val == 0:
+        e+=1
+    else:
+        v+=1
+print("temps : ",time.time() -start)
+print(f"Le joueur2 a gagné {v} fois, a fait {e} égalités et a perdu {d} fois")
