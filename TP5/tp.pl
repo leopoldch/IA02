@@ -19,7 +19,6 @@ jouer(CodeSecret, Essais) :-
         jouer(CodeSecret, NouveauEssais)
     ).
 
-
 nBienPlace([], [], 0).
 nBienPlace([H1|T1], [H2|T2], N) :-
     (H1 == H2 -> nBienPlace(T1, T2, N1), N is N1 + 1 ; nBienPlace(T1, T2, N)).
@@ -54,6 +53,3 @@ codeur(M, N, Code) :-longueur(Code, N),generer_code(M, Code).
 
 generer_code(_, []).
 generer_code(M, [C|Cs]) :-random(1, M, C),generer_code(M, Cs).
-
-
-
