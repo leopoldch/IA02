@@ -1,12 +1,8 @@
-jouons(M, N, Max) :-
-    codeur(M, N, CodeSecret),
-    jouer(CodeSecret, Max).
+jouons(M, N, Max) :-codeur(M, N, CodeSecret),jouer(CodeSecret, Max).
 
-jouer(CodeSecret, 0) :-
-    write('Vous avez perdu. Le code était : '), write(CodeSecret), nl.
+jouer(CodeSecret, 0) :-write('Vous avez perdu. Le code était : '), write(CodeSecret), nl.
 
-jouer(CodeSecret, Essais) :-
-    Essais > 0,
+jouer(CodeSecret, Essais) :-Essais > 0,
     write('Il reste '), write(Essais), write(' coup(s).'), nl,
     write('Donner un code : '), read(Proposition),
     \+ gagne(Proposition, CodeSecret),
@@ -17,14 +13,11 @@ jouer(CodeSecret, Essais) :-
     NouveauEssais is Essais - 1,
     jouer(CodeSecret, NouveauEssais).
 
-jouer(CodeSecret, Essais) :-
-    Essais > 0,
+jouer(CodeSecret, Essais) :-Essais > 0,
     write('Il reste '), write(Essais), write(' coup(s).'), nl,
     write('Donner un code : '), read(Proposition),
     gagne(Proposition, CodeSecret), 
     write('Gagne'), nl.
-
-
 
 
 nBienPlace([], [], 0).
@@ -50,7 +43,6 @@ enleveBP([C1|R1], [C2|R2], C1Bis, C2Bis) :-C1 = C2, enleveBP(R1, R2, R1Bis, R2Bi
 enleveBP([C1|R1], [C2|R2], [C1|C1Bis], [C2|C2Bis]) :-C1 \= C2, enleveBP(R1, R2, C1Bis, C2Bis),
     longueur([C1|C1Bis], Q),
     longueur([C2|C2Bis], Q).
-
 
 
 nMalPlacesAux([], _, 0).
