@@ -19,7 +19,6 @@ jouer(CodeSecret, Essais) :-Essais > 0,
     gagne(Proposition,CodeSecret), write('Gagné !').
 
 
-
 nBienPlace([], [], 0).
 nBienPlace([H1|T1], [H2|T2], N) :- H1 = H2, nBienPlace(T1, T2, N1), N is N1 + 1.
 nBienPlace([H1|T1], [H2|T2], N) :- H1 \= H2, nBienPlace(T1, T2, N).
@@ -46,10 +45,11 @@ enleveBP([C1|R1], [C2|R2], [C1|C1Bis], [C2|C2Bis]) :-C1 \= C2, enleveBP(R1, R2, 
 
 
 nMalPlaces([], _, 0).
- 
+% si element on enleve et incrémente 
 nMalPlaces([C1|R], Code2, MP) :-element(C1, Code2), enleve(C1, Code2, Code2SansC1), 
     nMalPlaces(R, Code2SansC1, K), 
     MP is K + 1.
+% si pas un element on continue
 nMalPlaces([C1|R], Code2, MP) :- \+ element(C1, Code2), nMalPlaces(R, Code2, MP).
 
 
@@ -57,3 +57,22 @@ codeur(M, N, Code) :-longueur(Code, N),generer_code(M, Code).
 
 generer_code(_, []).
 generer_code(M, [C|Cs]) :-random(1, M, C),generer_code(M, Cs).
+
+
+% ================================================================
+% =                           PARTIE 2                           =
+% ================================================================
+
+
+liste_couleurs(X, X, [X]).
+liste_couleurs(MI, MA, [MI|L]) :-K is MI + 1,liste_couleurs(K, MA, L).
+
+get_number(L,X) :- member(X,L).
+encode(_, [], 0).
+encode(L, [T|R], N) :- N > 0, K is N - 1,get_number(L, T),encode(L, R, K).
+gen(M,N,Code) :- liste_couleurs(1,M,COLORS),encode(COLORS,Code,N).
+
+test(Code, Historique) :-  \+ member(Code,Historique).
+
+
+
