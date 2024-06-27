@@ -72,7 +72,7 @@ encode(_, [], 0).
 encode(L, [T|R], N) :- N > 0, K is N - 1,get_number(L, T),encode(L, R, K).
 gen(M,N,Code) :- liste_couleurs(1,M,COLORS),encode(COLORS,Code,N).
 
-test(Code, Historique) :-  \+ member(Code,Historique).
-
-
+test(Code, Historique) :-  \+ member(Code,Historique).% on écarte ce qui est dans l'historique
+% reproduire le nombre d'éléments bien placés ? 
+test(Code, Historique) :- 
 
